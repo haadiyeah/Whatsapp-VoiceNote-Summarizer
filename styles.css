@@ -1,0 +1,24 @@
+.voice-note-highlight {
+  border: 2px solid #25d366 !important;
+  border-radius: 8px;
+  position: relative;
+  cursor: pointer;
+}
+
+.download-button {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #25d366;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: none;
+}
+
+.voice-note-highlight:hover .download-button {
+  display: block;
+}
