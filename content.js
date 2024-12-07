@@ -1,5 +1,5 @@
 // content.js
-console.log("WhatsApp Voice Note Extension loaded");
+console.log("WhatsApp Voice Note Extension loaded successfullaaaai");
 let isSelectionMode = false;
 
 // Debug logging function
@@ -340,33 +340,35 @@ function setupSelectionVoiceNote(container, voiceNoteElement) {
   container.classList.add("voice-note-selection");
 
   if (!container.querySelector(".selection-download-button")) {
-      const downloadBtn = document.createElement("button");
-      downloadBtn.className = "selection-download-button";
-      downloadBtn.innerHTML = "Select";
-      downloadBtn.style.display = "block"; // Make sure button is visible
-      downloadBtn.addEventListener("click", function(e) {
-          console.log("Selection button clicked");
-          e.stopPropagation();
-          e.preventDefault();
-      
-      // Remove selection highlight from all other elements
-      document.querySelectorAll('.voice-note-selection').forEach(el => {
-        el.classList.remove('voice-note-selection-active');
-      });
+    const downloadBtn = document.createElement("button");
+    downloadBtn.className = "selection-download-button";
+    downloadBtn.innerHTML = "Select";
+    downloadBtn.style.display = "block"; // Make sure button is visible
+    // In content.js - function setupSelectionVoiceNote
+downloadBtn.addEventListener("click", function (e) {
+  console.log("Selection button clicked");
+  e.stopPropagation();
+  e.preventDefault();
 
-      // Highlight selected voice note
-      container.classList.add('voice-note-selection-active');
-
-      // Send selected voice note info to popup
-      chrome.runtime.sendMessage({
-        type: 'VOICE_NOTE_SELECTED',
-        voiceNoteInfo: {
-          // Add any relevant info about the voice note
-          container: container.outerHTML,
-          element: voiceNoteElement.outerHTML
-        }
-      });
-    });
+  // Send selected voice note info to background script
+  chrome.runtime.sendMessage(
+    {
+      type: "VOICE_NOTE_SELECTED",
+      voiceNoteInfo: {
+        // Add any relevant info about the voice note
+        container: container.outerHTML,
+        element: voiceNoteElement.outerHTML,
+      },
+    },
+    function (response) {
+      if (chrome.runtime.lastError) {
+        console.error("Error sending message:", chrome.runtime.lastError);
+      } else {
+        console.log("Message sent successfully");
+      }
+    }
+  );
+});
     container.appendChild(downloadBtn);
   }
 }
@@ -418,16 +420,7 @@ const selectionStyles = `
 
 
 
-// Add message listener
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log("Message received:", request);
-  if (request.type === 'ENTER_SELECTION_MODE') {
-      isSelectionMode = true;
-      findVoiceNotes(); // Call immediately when entering selection mode
-      sendResponse({success: true});
-      return true; // Keep message channel open for async response
-  }
-});
+
 
 function initializeExtension() {
   debugLog("Initializing extension...");
@@ -455,4 +448,29 @@ document.head.appendChild(styleSheet);
 
 // Start the extension
 document.addEventListener("DOMContentLoaded", initializeExtension);
+
 window.addEventListener("load", initializeExtension);
+// Add to existing content.js
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && isSelectionMode) {
+        exitSelectionMode();
+    }
+});
+
+// Update the message listener
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    console.log("Message received:", request);
+    
+    if (request.type === 'ENTER_SELECTION_MODE') {
+        isSelectionMode = true;
+        findVoiceNotes();
+        sendResponse({success: true});
+        return true;
+    }
+    
+    if (request.type === 'EXIT_SELECTION_MODE') {
+        exitSelectionMode();
+        sendResponse({success: true});
+        return true;
+    }
+});

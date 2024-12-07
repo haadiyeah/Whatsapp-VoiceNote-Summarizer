@@ -1,5 +1,15 @@
 // background.js
 console.log("Background script loaded");
+if (chrome.storage && chrome.storage.local) {
+  console.log("chrome.storage.local is available");
+} else {
+  console.error("chrome.storage.local is undefined");
+}
+
+chrome.runtime.onInstalled.addListener(() => {
+  console.log("Extension installed");
+});
+
 
 let processedDownloads = new Set();
 
@@ -49,7 +59,25 @@ chrome.downloads.onChanged.addListener((delta) => {
     });
   }
 });
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  if (request.type === "VOICE_NOTE_SELECTED") {
+    console.log("Received VOICE_NOTE_SELECTED message in background script");
 
+    console.log("REQUEST: ", request);
+    // You can store the voice note info if needed
+    chrome.storage.local.set({ selectedVoiceNote: request.voiceNoteInfo }, function () {
+      console.log("Voice note info stored in chrome.storage.local");
+    });
+
+    if (chrome.runtime.lastError) {
+      console.error("Error storing data:", chrome.runtime.lastError);
+    } else {
+      console.log("Voice note info stored in chrome.storage.local");
+    }
+    // Send a response back to the sender
+    sendResponse({ success: true });
+  }
+});
 // Clean up processed downloads periodically
 setInterval(() => {
   processedDownloads.clear();

@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Get DOM elements
     const selectVoiceNoteBtn = document.getElementById('select-voice-note');
     const mainView = document.getElementById('main-view');
     const languageSelection = document.getElementById('language-selection');
@@ -13,9 +14,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to switch views
     function switchView(viewToShow) {
         [mainView, languageSelection, processingView, resultsView].forEach(view => {
-            view.style.display = 'none';
+            if (view) view.style.display = 'none';
         });
-        viewToShow.style.display = 'flex';
+        if (viewToShow) viewToShow.style.display = 'flex';
     }
 
     // Reset to initial state
@@ -25,18 +26,47 @@ document.addEventListener('DOMContentLoaded', function() {
         switchView(mainView);
     }
 
-    // Select Voice Note Button
-    selectVoiceNoteBtn.addEventListener('click', function() {
-        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-            if (tabs[0]) {
-                chrome.tabs.sendMessage(tabs[0].id, {type: 'ENTER_SELECTION_MODE'}, function(response) {
-                    if (chrome.runtime.lastError) {
-                        console.error('Error:', chrome.runtime.lastError);
-                    }
-                    // Don't close popup
-                });
+    // Check if a voice note was previously selected
+    function checkForSelectedVoiceNote() {
+        chrome.storage.local.get("selectedVoiceNote", function(data) {
+            if (data.selectedVoiceNote) {
+                selectedVoiceNote = data.selectedVoiceNote;
+                console.log("Selected voice note retrieved:", selectedVoiceNote);
+                chrome.storage.local.remove("selectedVoiceNote");
+                switchView(languageSelection);
             }
         });
+    }
+
+    // Initialize select voice note button
+    if (selectVoiceNoteBtn) {
+        selectVoiceNoteBtn.addEventListener('click', function() {
+            console.log("Select Voice Note button clicked");
+            chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+                if (tabs[0]) {
+                    chrome.tabs.sendMessage(tabs[0].id, {type: 'ENTER_SELECTION_MODE'}, function(response) {
+                        if (chrome.runtime.lastError) {
+                            console.error('Error:', chrome.runtime.lastError);
+                        } else {
+                            console.log('Selection mode entered:', response);
+                        }
+                    });
+                }
+            });
+        });
+    } else {
+        console.log("Select Voice Note button not found");
+    }
+
+    // Handle ESC key to exit selection mode
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+                if (tabs[0]) {
+                    chrome.tabs.sendMessage(tabs[0].id, {type: 'EXIT_SELECTION_MODE'});
+                }
+            });
+        }
     });
 
     // Listen for voice note selection
@@ -49,21 +79,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Language Selection
     [urduBtn, englishBtn].forEach(btn => {
-        btn.addEventListener('click', function() {
-            selectedLanguage = btn.id === 'urdu-btn' ? 'urdu' : 'english';
-            
-            // Show processing view
-            switchView(processingView);
-
-            // Simulate processing (replace with actual processing in future)
-            simulateProcessing();
-        });
+        if (btn) {
+            btn.addEventListener('click', function() {
+                selectedLanguage = btn.id === 'urdu-btn' ? 'urdu' : 'english';
+                switchView(processingView);
+                processVoiceNote();
+            });
+        }
     });
 
-    // Simulated processing function
-    function simulateProcessing() {
+    // Process voice note
+    function processVoiceNote() {
+        // TODO: Replace with actual API call
         setTimeout(() => {
-            // Update results (mock data for now)
             document.getElementById('transcription-text').textContent = 
                 selectedLanguage === 'urdu' 
                     ? 'یہ ایک مزے دار آواز نوٹ ہے۔' 
@@ -75,14 +103,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     : 'The voice note contains humor and joy.';
 
             switchView(resultsView);
-        }, 2000);  // Simulate 2-second processing
+        }, 2000);
     }
 
-    // Add a reset button to go back to main view
+    // Add reset button
     const resetButton = document.createElement('button');
     resetButton.textContent = 'Start Over';
     resetButton.className = 'secondary-button';
     resetButton.style.marginTop = '10px';
     resetButton.addEventListener('click', resetState);
     document.querySelector('.container').appendChild(resetButton);
+
+    // Check for selected voice note on load
+    checkForSelectedVoiceNote();
 });

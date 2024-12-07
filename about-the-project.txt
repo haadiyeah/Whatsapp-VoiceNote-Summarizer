@@ -1,1 +1,18 @@
-i am making an application that is meant to summarize voice notes,using whisper turbo and an LLM. this is an application that we want to develop as a chrome web extension. User flow: 1. the user will open WhatsApp web and then open our Chrome extension. There will be a button "Select voice note". When the user clicks it, the selection view will appear, highlighting possible voice notes detected on the screen. and the user should be able to press esc to unhighlight the voice notes. When the user selects the voice note, the extension will follow the download method already being done in the code. Then, it will ask to select language: Urdu or English. When the user clicks the button, Then, the audio of that voice note will be sent to our app, where it will be analyzed . WHile it is processing, loading should be shown. And then both the transcription and the summary will be returned. and displayed in the chrome web extension popup. We will ensure user privacy by making sure that only those voice notes are sent to the server which the user voluntarily selects himself. We'll work on the actual summarization and transcription logic later. the attached files are all in my chrome extension folder,
+i am making an application that is meant to summarize voice notes,
+using whisper turbo and an LLM. this is an application that we want
+ to develop as a chrome web extension. User flow: 1. the user will 
+ open WhatsApp web and then open our Chrome extension. There will 
+ be a button "Select voice note". When the user clicks it, the 
+ selection view will appear, highlighting possible voice notes detected 
+ on the screen. and the user should be able to press esc to unhighlight 
+ the voice notes. When the user selects the voice note, the extension 
+ will download the audio to the downloads folder inside the extension. Then,
+  it will ask to select language: Urdu or English. When the user 
+  clicks the button, Then, the audio of that voice note will be sent 
+  to our app, where it will be analyzed . WHile it is processing, 
+  loading should be shown. And then both the transcription and the summary
+   will be returned. and displayed in the chrome web extension popup.
+    We will ensure user privacy by making sure that only those voice notes
+     are sent to the server which the user voluntarily selects himself.
+      We'll work on the actual summarization and transcription logic later. 
+      this directory itself is the extension

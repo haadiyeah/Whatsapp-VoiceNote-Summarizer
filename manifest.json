@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "WhatsApp Voice Note Analyzer",
   "version": "1.0",
-  "permissions": ["activeTab", "downloads", "scripting"],
+  "permissions": ["activeTab",  "storage", "downloads", "scripting"],
   "host_permissions": ["https://web.whatsapp.com/*"],
   "background": {
     "service_worker": "background.js"
