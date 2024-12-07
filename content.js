@@ -52,21 +52,6 @@ function findMessageContainer(element) {
   );
 }
 
-function setupVoiceNoteDownload(container, element) {
-  container.classList.add("voice-note-highlight");
-
-  if (!container.querySelector(".download-button")) {
-    const downloadBtn = document.createElement("button");
-    downloadBtn.className = "download-button";
-    downloadBtn.innerHTML = "⬇️ Save";
-    downloadBtn.addEventListener("click", async function (e) {
-      e.stopPropagation();
-      e.preventDefault();
-      await clickMenuAndDownload(container);
-    });
-    container.appendChild(downloadBtn);
-  }
-}
 
 async function findDownloadButton() {
   debugLog("Looking for download button...");
@@ -121,58 +106,21 @@ async function simulateMouseEvent(element, eventType) {
   }
 }
 
-function setupVoiceNoteDownload(container, voiceNoteElement) {
-  container.classList.add("voice-note-highlight");
+// function setupVoiceNoteDownload(container, voiceNoteElement) {
+//   container.classList.add("voice-note-highlight");
 
-  if (!container.querySelector(".download-button")) {
-    const downloadBtn = document.createElement("button");
-    downloadBtn.className = "download-button";
-    downloadBtn.innerHTML = "⬇️ Save";
-    downloadBtn.addEventListener("click", async function (e) {
-      e.stopPropagation();
-      e.preventDefault();
-      await clickMenuAndDownload(container, voiceNoteElement);
-    });
-    container.appendChild(downloadBtn);
-  }
-}
-
-async function findDownArrowButton(container, voiceNoteElement) {
-  debugLog("Looking for down arrow button...");
-
-  // Find the audio player element which needs to be hovered
-  const audioPlayer =
-    voiceNoteElement.closest('div[data-testid="audio-player"]') ||
-    voiceNoteElement;
-
-  // Add visual feedback to show which element we're hovering
-  audioPlayer.classList.add("debug-hover");
-
-  // Simulate hover on the audio player
-  const mouseEnterEvent = new MouseEvent("mouseenter", {
-    view: window,
-    bubbles: true,
-    cancelable: true,
-  });
-  audioPlayer.dispatchEvent(mouseEnterEvent);
-
-  // Wait for the menu button to appear
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  // Look for the down-context button within this specific voice note container
-  const menuButton = audioPlayer.querySelector(
-    'span[data-icon="down-context"]'
-  );
-
-  if (!menuButton) {
-    audioPlayer.classList.remove("debug-hover");
-    throw new Error(
-      "Menu button not found - please hover over the voice note manually"
-    );
-  }
-
-  return menuButton;
-}
+//   if (!container.querySelector(".download-button")) {
+//     const downloadBtn = document.createElement("button");
+//     downloadBtn.className = "download-button";
+//     downloadBtn.innerHTML = "⬇️ Save";
+//     downloadBtn.addEventListener("click", async function (e) {
+//       e.stopPropagation();
+//       e.preventDefault();
+//       await clickMenuAndDownload(container, voiceNoteElement);
+//     });
+//     container.appendChild(downloadBtn);
+//   }
+// }
 
 async function findDownArrowButton(container, voiceNoteElement) {
   debugLog("Looking for down arrow button...");
@@ -330,10 +278,45 @@ const styles = `
   outline: 3px solid blue !important;
   background-color: rgba(0, 0, 255, 0.1) !important;
 }`;
-// Add to existing content.js file, just before the initializeExtension function
 
 
+// function setupSelectionVoiceNote(container, voiceNoteElement) {
+//   console.log("Setting up voice note selection for:", container);
+//   container.classList.add("voice-note-selection");
 
+//   if (!container.querySelector(".selection-download-button")) {
+//     const downloadBtn = document.createElement("button");
+//     downloadBtn.className = "selection-download-button";
+//     downloadBtn.innerHTML = "Select";
+//     downloadBtn.style.display = "block"; // Make sure button is visible
+//     // In content.js - function setupSelectionVoiceNote
+// downloadBtn.addEventListener("click", function (e) {
+//   console.log("Selection button clicked");
+//   e.stopPropagation();
+//   e.preventDefault();
+
+//   // Send selected voice note info to background script
+//   chrome.runtime.sendMessage(
+//     {
+//       type: "VOICE_NOTE_SELECTED",
+//       voiceNoteInfo: {
+//         // Add any relevant info about the voice note
+//         container: container.outerHTML,
+//         element: voiceNoteElement.outerHTML,
+//       },
+//     },
+//     function (response) {
+//       if (chrome.runtime.lastError) {
+//         console.error("Error sending message:", chrome.runtime.lastError);
+//       } else {
+//         console.log("Message sent successfully");
+//       }
+//     }
+//   );
+// });
+//     container.appendChild(downloadBtn);
+//   }
+// }
 
 function setupSelectionVoiceNote(container, voiceNoteElement) {
   console.log("Setting up voice note selection for:", container);
@@ -344,35 +327,46 @@ function setupSelectionVoiceNote(container, voiceNoteElement) {
     downloadBtn.className = "selection-download-button";
     downloadBtn.innerHTML = "Select";
     downloadBtn.style.display = "block"; // Make sure button is visible
-    // In content.js - function setupSelectionVoiceNote
-downloadBtn.addEventListener("click", function (e) {
-  console.log("Selection button clicked");
-  e.stopPropagation();
-  e.preventDefault();
 
-  // Send selected voice note info to background script
-  chrome.runtime.sendMessage(
-    {
-      type: "VOICE_NOTE_SELECTED",
-      voiceNoteInfo: {
-        // Add any relevant info about the voice note
-        container: container.outerHTML,
-        element: voiceNoteElement.outerHTML,
-      },
-    },
-    function (response) {
-      if (chrome.runtime.lastError) {
-        console.error("Error sending message:", chrome.runtime.lastError);
-      } else {
-        console.log("Message sent successfully");
+    downloadBtn.addEventListener("click", async function (e) {
+      console.log("Selection button clicked");
+      e.stopPropagation();
+      e.preventDefault();
+
+      // Exit selection mode
+      exitSelectionMode();
+
+      try {
+        // Initiate the download process
+        await clickMenuAndDownload(container, voiceNoteElement);
+
+        // After the download, send selected voice note info to background script
+        chrome.runtime.sendMessage(
+          {
+            type: "VOICE_NOTE_SELECTED",
+            voiceNoteInfo: {
+              // Add any relevant info about the voice note
+              container: container.outerHTML,
+              element: voiceNoteElement.outerHTML,
+            },
+          },
+          function (response) {
+            if (chrome.runtime.lastError) {
+              console.error("Error sending message:", chrome.runtime.lastError);
+            } else {
+              console.log("Message sent successfully");
+            }
+          }
+        );
+      } catch (error) {
+        console.error("Failed to download voice note:", error);
+        alert(`Failed to download voice note: ${error.message}`);
       }
-    }
-  );
-});
+    });
+
     container.appendChild(downloadBtn);
   }
 }
-
 
 function exitSelectionMode() {
   isSelectionMode = false;
