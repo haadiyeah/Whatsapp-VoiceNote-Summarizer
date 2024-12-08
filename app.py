@@ -116,7 +116,7 @@ class AudioProcessor:
             summaries = []
             
             for chunk in chunks:
-                prompt = f"Summarize concisely:\n\n{chunk}\n\nSummary:"
+                prompt = f"Summarize the key points of the following text in 3-5 bullet points. Do not exceed more that 3-5 brief points. Respond with the bullet points only, no additional information. Here is the text: \n\n{chunk}\n\n "
                 inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=max_length)
                 
                 # Move inputs to the same device as the model
