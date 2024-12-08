@@ -1,5 +1,5 @@
 // content.js
-console.log("WhatsApp Voice Note Extension loaded successfullaaaai");
+console.log("WhatsApp Voice Note Extension loaded version 12220");
 let isSelectionMode = false;
 
 // Debug logging function
@@ -322,6 +322,23 @@ function setupSelectionVoiceNote(container, voiceNoteElement) {
   console.log("Setting up voice note selection for:", container);
   container.classList.add("voice-note-selection");
 
+  console.log("VoiceNoteElement", voiceNoteElement);
+
+  //Select the child element of container that has the timestamp. class: x1rg5ohu
+  const timestampElement = container.querySelector('.x1rg5ohu');
+  //select the child elem of container that has vn length, classname: _ak8w
+  const vnLengthElement = container.querySelector('._ak8w');
+  console.log("vn lengtht elememeeeeeeee", vnLengthElement)
+  //select the img of the sender: class of img tag = x1n2onr6, get the src link
+  const imgClasses= ".x1n2onr6.x1lliihq.x115dhu7.x17vty23.x1hc1fzr._ao3e"
+  let senderImage = container.querySelector(imgClasses)
+
+  if (!senderImage) {
+    senderImage="https://static.vecteezy.com/system/resources/thumbnails/036/594/092/small_2x/man-empty-avatar-photo-placeholder-for-social-networks-resumes-forums-and-dating-sites-male-and-female-no-photo-images-for-unfilled-user-profile-free-vector.jpg"
+  } else {
+    senderImage = senderImage.src
+  }
+
   if (!container.querySelector(".selection-download-button")) {
     const downloadBtn = document.createElement("button");
     downloadBtn.className = "selection-download-button";
@@ -329,7 +346,7 @@ function setupSelectionVoiceNote(container, voiceNoteElement) {
     downloadBtn.style.display = "block"; // Make sure button is visible
 
     downloadBtn.addEventListener("click", async function (e) {
-      console.log("Selection button clicked");
+      console.log("downloadd button clicked");
       e.stopPropagation();
       e.preventDefault();
 
@@ -348,6 +365,9 @@ function setupSelectionVoiceNote(container, voiceNoteElement) {
               // Add any relevant info about the voice note
               container: container.outerHTML,
               element: voiceNoteElement.outerHTML,
+              senderImage: senderImage ,
+              vnLength: vnLengthElement?.textContent || "Unknown Length",
+              timestamp: timestampElement?.textContent || "Unknown Time"
             },
           },
           function (response) {
