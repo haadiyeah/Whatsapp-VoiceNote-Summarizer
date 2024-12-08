@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>WhatsApp Voice Note Summarizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat&display=swap" rel="stylesheet">
+
     <style>
         :root {
             --primary-color: #005C4B;
@@ -13,16 +15,18 @@
 
         body {
             width: 350px;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Montserrat', sans-serif; 
             background-color: var(--background-color);
             color: var(--text-color);
             margin: 0;
             padding: 20px;
             box-sizing: border-box;
+            border-radius: 20px;
         }
 
         .container {
             display: flex;
+            border-radius: 20px;
             flex-direction: column;
             align-items: center;
             text-align: center;
@@ -31,9 +35,12 @@
         .header {
             width: 100%;
             display: flex;
-            justify-content: space-between;
+            gap: 10px;
             align-items: center;
+            justify-content: center;
             margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom:#005C4B 2px solid;
         }
 
         .logo {
@@ -111,6 +118,10 @@
             text-align: left;
         }
 
+        button{
+            font-family: inherit;
+        }
+
         .result-title {
             font-weight: bold;
             margin-bottom: 10px;
@@ -121,8 +132,8 @@
 <body>
     <div class="container">
         <div class="header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#306941" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-audio-lines"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg>
             <div class="logo">Voice Note Analyzer</div>
-            <div class="status-indicator"></div>
         </div>
 
         <div id="main-view">

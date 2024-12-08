@@ -115,9 +115,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 // Hide the button when the selection mode is entered and show text instead
                                 selectVoiceNoteBtn.style.display = 'none';
                                 const selectionText = document.createElement('p');
-                                selectionText.textContent = 'Please select a voice note';
-                                selectionText.style.fontSize = '16px';
-                                selectionText.style.fontWeight = 'bold';
+                                selectionText.textContent = 'Please select a voice note from WhatsApp Web. Press ESC to exit selection mode.';
+                                selectionText.style.fontSize = '14px';
+                                selectionText.style.fontWeight = 'semibold';
                                 selectionText.style.color = '#333';
                                 selectionText.style.textAlign = 'center';
                                 // Corrected the method name here
