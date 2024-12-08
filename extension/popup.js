@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize select voice note button
     if (selectVoiceNoteBtn) {
         selectVoiceNoteBtn.addEventListener('click', function() {
-            console.log("Select Voice Note button clicked@@@@@@@");
+            console.log("Select Voice Note button clicked !!");
             chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
                 if (tabs[0]) {
                     chrome.tabs.sendMessage(tabs[0].id, {type: 'ENTER_SELECTION_MODE'}, function(response) {

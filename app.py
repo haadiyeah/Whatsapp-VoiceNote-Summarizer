@@ -175,6 +175,7 @@ def ensure_extension_dir():
 
 @app.post('/analyze-audio/{lang}')
 async def analyze_audio(lang: str = "en"):
+    file_path = None
     try:
         # Validate language parameter
         if lang not in ["ur", "en"]:
@@ -212,10 +213,17 @@ async def analyze_audio(lang: str = "en"):
         logger.exception("Error processing audio file")
         raise HTTPException(status_code=500, detail=str(e))
     finally:
+        # Clean up: remove the processed file and clear CUDA cache
+        if file_path and os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                logger.info(f"Deleted processed file: {file_path}")
+            except Exception as e:
+                logger.error(f"Failed to delete file {file_path}: {str(e)}")
+        
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
             gc.collect()
-
 
 @app.post('/process_downloaded_file')
 async def process_downloaded_file(request: Request):
