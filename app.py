@@ -92,6 +92,11 @@ class AudioProcessor:
         try:
             torch.cuda.empty_cache()
             gc.collect()
+
+            print("language sleected : " , language)
+
+            #strip any white spaces of language
+            language = language.strip()
             
             # Process in smaller chunks if needed
             chunk_length = 30  # seconds
