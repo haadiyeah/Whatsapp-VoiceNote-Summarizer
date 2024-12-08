@@ -1,5 +1,5 @@
 // content.js
-console.log("WhatsApp Voice Note Extension loaded version 12220");
+console.log("WhatsApp Voice Note Extension loaded version 1dfd20");
 let isSelectionMode = false;
 
 // Debug logging function

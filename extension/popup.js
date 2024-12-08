@@ -158,14 +158,15 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.addEventListener('click', function() {
                 selectedLanguage = btn.id === 'urdu-btn' ? 'urdu' : 'english';
                 switchView(processingView);
-                processVoiceNote();
+                const languageCode = selectedLanguage === 'urdu' ? 'ur' : 'en';
+                processVoiceNote(languageCode);
             });
         }
     });
 
-    async function analyzeLatestAudioFile() {
+    async function analyzeLatestAudioFile(languageCode) {
         try {
-            const response = await fetch('http://localhost:5000/analyze-audio', {
+            const response = await fetch(`http://localhost:5000/analyze-audio/${languageCode}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -190,9 +191,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Process voice note
-    function processVoiceNote() {
+    function processVoiceNote(languageCode) {
         // TODO: Replace with actual API call
-        analyzeLatestAudioFile()
+        analyzeLatestAudioFile(languageCode)
         .then(result => {
             document.getElementById('transcription-text').textContent =result.transcription;
             document.getElementById('summary-text').textContent = result.summary;

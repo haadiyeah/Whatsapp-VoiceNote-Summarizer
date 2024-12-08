@@ -168,13 +168,21 @@ def ensure_extension_dir():
         os.makedirs(extension_dir)
     return extension_dir
 
-@app.post('/analyze-audio')
-async def analyze_audio():
+@app.post('/analyze-audio/{lang}')
+async def analyze_audio(lang: str = "en"):
     try:
+        # Validate language parameter
+        if lang not in ["ur", "en"]:
+            raise HTTPException(
+                status_code=400, 
+                detail="Language must be either 'ur' for Urdu or 'en' for English"
+            )
+            
         # Clear CUDA cache at start
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
             gc.collect()
+            
         # Get the latest file in the downloads directory of extension
         downloads_dir = ensure_extension_dir()
         files = os.listdir(downloads_dir)
@@ -186,23 +194,22 @@ async def analyze_audio():
         file_path = os.path.join(downloads_dir, latest_file)
         audio_array, _ = sf.read(file_path)
 
-        # Process the audio
-        transcription = processor.transcribe_audio(audio_array)
+        # Process the audio with specified language
+        transcription = processor.transcribe_audio(audio_array, language=lang)
         summary = processor.generate_summary(transcription)
 
         return JSONResponse({
             'summary': summary,
-            'transcription': transcription
+            'transcription': transcription,
+            'language': lang
         })
     except Exception as e:
         logger.exception("Error processing audio file")
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        # Clear CUDA cache at end
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
             gc.collect()
-    
 
 
 @app.post('/process_downloaded_file')
