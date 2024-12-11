@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Handle the response data
             console.log('Transcription:', data.transcription);
-            console.log('Summary:', data.summary);
+            console.log('Summary:', data.summary.summary);
             
             return data;
         } catch (error) {
@@ -193,15 +193,38 @@ document.addEventListener('DOMContentLoaded', function() {
     // Process voice note
     function processVoiceNote(languageCode) {
         // TODO: Replace with actual API call
-        analyzeLatestAudioFile(languageCode)
-        .then(result => {
-            document.getElementById('transcription-text').textContent =result.transcription;
-            document.getElementById('summary-text').textContent = result.summary;
-            switchView(resultsView);
-        })
-        .catch(error => {
-            console.error('Error processing voice note:', error);
-        });
+        // analyzeLatestAudioFile(languageCode)
+        // .then(result => {
+        //     document.getElementById('transcription-text').textContent =result.transcription;
+        //     document.getElementById('summary-text').textContent = result.summary;
+        //     switchView(resultsView);
+        // })
+        // .catch(error => {
+        //     console.error('Error processing voice note:', error);
+        // });
+               analyzeLatestAudioFile(languageCode)
+            .then(result => {
+                console.log(result);
+                document.getElementById('transcription-text').textContent = result.transcription;
+        
+                // Create a bullet point list for the summary
+                const summaryElement = document.getElementById('summary-text');
+                summaryElement.innerHTML = ''; // Clear any existing content
+                const ul = document.createElement('ul');
+                for (const key in result.summary.summary) {
+                    if (result.summary.summary.hasOwnProperty(key)) {
+                        const li = document.createElement('li');
+                        li.textContent = result.summary.summary[key]; // Render the value of each key-value pair
+                        ul.appendChild(li);
+                    }
+                }
+                summaryElement.appendChild(ul);
+        
+                switchView(resultsView);
+            })
+            .catch(error => {
+                console.error('Error processing voice note:', error);
+            });
         // setTimeout(() => {
         //     document.getElementById('transcription-text').textContent = 
         //         selectedLanguage === 'urdu' 

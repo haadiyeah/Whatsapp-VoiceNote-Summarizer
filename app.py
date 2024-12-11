@@ -1,4 +1,6 @@
 # app.py
+import json
+import re
 import torch
 import gc
 from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
@@ -66,12 +68,14 @@ class AudioProcessor:
             model="openai/whisper-base",
             device="cuda" if torch.cuda.is_available() else "cpu"
         )
+        self.tokenizer = AutoTokenizer.from_pretrained("unsloth/gemma-2-9b-it-bnb-4bit")
+        self.model = AutoModelForCausalLM.from_pretrained("unsloth/gemma-2-9b-it-bnb-4bit")
 
         # Load model with memory optimizations
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            "meta-llama/Llama-3.2-3B-Instruct",
-            use_auth_token=hf_token
-        )
+        # self.tokenizer = AutoTokenizer.from_pretrained(
+        #     "meta-llama/Llama-3.2-3B-Instruct",
+        #     use_auth_token=hf_token
+        # )
         
         model_kwargs = {
             "device_map": "auto",
@@ -82,11 +86,11 @@ class AudioProcessor:
         if quantization_config:
             model_kwargs["quantization_config"] = quantization_config
 
-        self.model = AutoModelForCausalLM.from_pretrained(
-            "meta-llama/Llama-3.2-3B-Instruct",
-            use_auth_token=hf_token,
-            **model_kwargs
-        )
+        # self.model = AutoModelForCausalLM.from_pretrained(
+        #     "meta-llama/Llama-3.2-3B-Instruct",
+        #     use_auth_token=hf_token,
+        #     **model_kwargs
+        # )
 
     def transcribe_audio(self, audio_data, language="en"):
         try:
@@ -110,38 +114,119 @@ class AudioProcessor:
             torch.cuda.empty_cache()
             gc.collect()
 
+    # def generate_summary(self, text):
+    #     try:
+    #         torch.cuda.empty_cache()
+    #         gc.collect()
+            
+    #         # Split long text into chunks
+    #         max_length = 512
+    #         chunks = [text[i:i + max_length] for i in range(0, len(text), max_length)]
+    #         summaries = []
+            
+    #         for chunk in chunks:
+    #             prompt = f"Summarize the key points of the following text in 3-5 bullet points. Do not exceed more that 3-5 brief points. Respond with the bullet points only, no additional information. Here is the text: \n\n{chunk}\n\n "
+    #             inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=max_length)
+                
+    #             # Move inputs to the same device as the model
+    #             device = next(self.model.parameters()).device
+    #             inputs = inputs.to(device)
+                
+    #             with torch.no_grad():
+    #                 max_new_tokens = 200  # Maximum new tokens to generate
+                    
+    #                 outputs = self.model.generate(
+    #                     **inputs,
+    #                     max_new_tokens=max_new_tokens,
+    #                     num_return_sequences=1,
+    #                     temperature=0.7,
+    #                     do_sample=True,
+    #                     pad_token_id=self.tokenizer.eos_token_id
+    #                 )
+    #             summaries.append(self.tokenizer.decode(outputs[0], skip_special_tokens=True))
+            
+    #         return " ".join(summaries)
+    #     finally:
+    #         torch.cuda.empty_cache()
+    #         gc.collect()
     def generate_summary(self, text):
         try:
             torch.cuda.empty_cache()
             gc.collect()
             
-            # Split long text into chunks
-            max_length = 512
-            chunks = [text[i:i + max_length] for i in range(0, len(text), max_length)]
-            summaries = []
+            #prompt = f"Summarize the key points of the following text in 3-5 bullet points. Do not exceed more than 3-5 brief points. Respond with the bullet points only, no additional information. Here is the text: \n\n{text}\n\n"
+            #prompt=f"Summarize the following text in bullet points and return the bullet points only. Here is the text: \n\n{text}\n\n"
+            prompt = f"""Analyze the following text and provide a structured summary with exactly 5 key points. 
+            Format the response as a valid JSON with numbered points. Each point should be clear and concise.
             
-            for chunk in chunks:
-                prompt = f"Summarize the key points of the following text in 3-5 bullet points. Do not exceed more that 3-5 brief points. Respond with the bullet points only, no additional information. Here is the text: \n\n{chunk}\n\n "
-                inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=max_length)
-                
-                # Move inputs to the same device as the model
-                device = next(self.model.parameters()).device
-                inputs = inputs.to(device)
-                
-                with torch.no_grad():
-                    max_new_tokens = 200  # Maximum new tokens to generate
-                    
-                    outputs = self.model.generate(
-                        **inputs,
-                        max_new_tokens=max_new_tokens,
-                        num_return_sequences=1,
-                        temperature=0.7,
-                        do_sample=True,
-                        pad_token_id=self.tokenizer.eos_token_id
-                    )
-                summaries.append(self.tokenizer.decode(outputs[0], skip_special_tokens=True))
+            Text to analyze: \n\n{text}\n\n
             
-            return " ".join(summaries)
+            Required JSON format:
+            {{
+                "summary": {{
+                    "point1": "First key point here",
+                    "point2": "Second key point here",
+                    "point3": "Third key point here",
+                    "point4": "Fourth key point here",
+                    "point5": "Fifth key point here"
+                }}
+            }}
+            
+            Return only the JSON, no additional text."""
+            inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=4096)  # Adjust max_length as needed
+            
+            # Move inputs to the same device as the model
+            device = next(self.model.parameters()).device
+            inputs = inputs.to(device)
+            
+            with torch.no_grad():
+                max_new_tokens = 200  # Maximum new tokens to generate
+                
+                outputs = self.model.generate(
+                    **inputs,
+                    max_new_tokens=max_new_tokens,
+                    num_return_sequences=1,
+                    temperature=0.7,
+                    do_sample=True,
+                    pad_token_id=self.tokenizer.eos_token_id
+                )
+            
+              
+            generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            
+            # Remove the prompt from the generated text
+            #summary = generated_text.replace(prompt, "").strip().strip("*")
+            generated_text = generated_text.replace(prompt, "").strip().strip("*")
+            json_match = re.search(r'\{[\s\S]*\}', generated_text)
+            if json_match:
+                try:
+                    summary_json = json.loads(json_match.group())
+                    return summary_json
+                except json.JSONDecodeError:
+                    # Fallback structure if JSON parsing fails
+                    return {
+                        "summary": {
+                            "point1": "Error parsing model output into JSON",
+                            "point2": "Generated text was not valid JSON",
+                            "point3": "Using fallback structure",
+                            "point4": "Please try regenerating the summary",
+                            "point5": "Check model output format"
+                        }
+                    }
+            else:
+                # Fallback if no JSON structure found
+                return {
+                    "summary": {
+                        "point1": "No JSON structure found in output",
+                        "point2": "Model output format was incorrect",
+                        "point3": "Using fallback structure",
+                        "point4": "Please try regenerating the summary",
+                        "point5": "Check prompt formatting"
+                    }
+                }
+            
+            
+            #return summary
         finally:
             torch.cuda.empty_cache()
             gc.collect()
